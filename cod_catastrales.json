@@ -1,0 +1,618 @@
+[
+  {
+    "Codigo_Municipal_Catastral": 35001,
+    "Nombre_Municipio": "Agaete",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35001,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35002,
+    "Nombre_Municipio": "Agüimes",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35002,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35003,
+    "Nombre_Municipio": "Antigua",
+    "Nombre_Isla": "Fuerteventura",
+    "Codigo_Municipal_ISTAC": 35003,
+    "Codigo_Isla_INE": 351
+  },
+  {
+    "Codigo_Municipal_Catastral": 35004,
+    "Nombre_Municipio": "Arrecife",
+    "Nombre_Isla": "Lanzarote",
+    "Codigo_Municipal_ISTAC": 35004,
+    "Codigo_Isla_INE": 353
+  },
+  {
+    "Codigo_Municipal_Catastral": 35005,
+    "Nombre_Municipio": "Artenara",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35005,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35006,
+    "Nombre_Municipio": "Arucas",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35006,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35007,
+    "Nombre_Municipio": "Betancuria",
+    "Nombre_Isla": "Fuerteventura",
+    "Codigo_Municipal_ISTAC": 35007,
+    "Codigo_Isla_INE": 351
+  },
+  {
+    "Codigo_Municipal_Catastral": 35008,
+    "Nombre_Municipio": "Firgas",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35008,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35009,
+    "Nombre_Municipio": "Gáldar",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35009,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35010,
+    "Nombre_Municipio": "Haría",
+    "Nombre_Isla": "Lanzarote",
+    "Codigo_Municipal_ISTAC": 35010,
+    "Codigo_Isla_INE": 353
+  },
+  {
+    "Codigo_Municipal_Catastral": 35011,
+    "Nombre_Municipio": "Ingenio",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35011,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35012,
+    "Nombre_Municipio": "Mogán",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35012,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35013,
+    "Nombre_Municipio": "Moya",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35013,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35014,
+    "Nombre_Municipio": "La Oliva",
+    "Nombre_Isla": "Fuerteventura",
+    "Codigo_Municipal_ISTAC": 35014,
+    "Codigo_Isla_INE": 351
+  },
+  {
+    "Codigo_Municipal_Catastral": 35015,
+    "Nombre_Municipio": "Pájara",
+    "Nombre_Isla": "Fuerteventura",
+    "Codigo_Municipal_ISTAC": 35015,
+    "Codigo_Isla_INE": 351
+  },
+  {
+    "Codigo_Municipal_Catastral": 35016,
+    "Nombre_Municipio": "Las Palmas de Gran Canaria",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35016,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35017,
+    "Nombre_Municipio": "Puerto del Rosario",
+    "Nombre_Isla": "Fuerteventura",
+    "Codigo_Municipal_ISTAC": 35017,
+    "Codigo_Isla_INE": 351
+  },
+  {
+    "Codigo_Municipal_Catastral": 35018,
+    "Nombre_Municipio": "San Bartolomé",
+    "Nombre_Isla": "Lanzarote",
+    "Codigo_Municipal_ISTAC": 35018,
+    "Codigo_Isla_INE": 353
+  },
+  {
+    "Codigo_Municipal_Catastral": 35019,
+    "Nombre_Municipio": "San Bartolomé de Tirajana",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35019,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35020,
+    "Nombre_Municipio": "La Aldea de San Nicolás",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35020,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35021,
+    "Nombre_Municipio": "Santa Brígida",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35021,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35022,
+    "Nombre_Municipio": "Santa Lucía de Tirajana",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35022,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35023,
+    "Nombre_Municipio": "Santa María de Guía",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35023,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35024,
+    "Nombre_Municipio": "Teguise",
+    "Nombre_Isla": "Lanzarote",
+    "Codigo_Municipal_ISTAC": 35024,
+    "Codigo_Isla_INE": 353
+  },
+  {
+    "Codigo_Municipal_Catastral": 35025,
+    "Nombre_Municipio": "Tejeda",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35025,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35026,
+    "Nombre_Municipio": "Telde",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35026,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35027,
+    "Nombre_Municipio": "Teror",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35027,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35028,
+    "Nombre_Municipio": "Tías",
+    "Nombre_Isla": "Lanzarote",
+    "Codigo_Municipal_ISTAC": 35028,
+    "Codigo_Isla_INE": 353
+  },
+  {
+    "Codigo_Municipal_Catastral": 35029,
+    "Nombre_Municipio": "Tinajo",
+    "Nombre_Isla": "Lanzarote",
+    "Codigo_Municipal_ISTAC": 35029,
+    "Codigo_Isla_INE": 353
+  },
+  {
+    "Codigo_Municipal_Catastral": 35030,
+    "Nombre_Municipio": "Tuineje",
+    "Nombre_Isla": "Fuerteventura",
+    "Codigo_Municipal_ISTAC": 35030,
+    "Codigo_Isla_INE": 351
+  },
+  {
+    "Codigo_Municipal_Catastral": 35031,
+    "Nombre_Municipio": "Valsequillo",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35031,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35032,
+    "Nombre_Municipio": "Valleseco",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35032,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35033,
+    "Nombre_Municipio": "Vega de San Mateo",
+    "Nombre_Isla": "Gran Canaria",
+    "Codigo_Municipal_ISTAC": 35033,
+    "Codigo_Isla_INE": 352
+  },
+  {
+    "Codigo_Municipal_Catastral": 35034,
+    "Nombre_Municipio": "Yaiza",
+    "Nombre_Isla": "Lanzarote",
+    "Codigo_Municipal_ISTAC": 35034,
+    "Codigo_Isla_INE": 353
+  },
+  {
+    "Codigo_Municipal_Catastral": 38001,
+    "Nombre_Municipio": "Adeje",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38001,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38002,
+    "Nombre_Municipio": "Agulo",
+    "Nombre_Isla": "La Gomera",
+    "Codigo_Municipal_ISTAC": 38002,
+    "Codigo_Isla_INE": 381
+  },
+  {
+    "Codigo_Municipal_Catastral": 38003,
+    "Nombre_Municipio": "Alajeró",
+    "Nombre_Isla": "La Gomera",
+    "Codigo_Municipal_ISTAC": 38003,
+    "Codigo_Isla_INE": 381
+  },
+  {
+    "Codigo_Municipal_Catastral": 38004,
+    "Nombre_Municipio": "Arafo",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38004,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38005,
+    "Nombre_Municipio": "Arico",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38005,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38006,
+    "Nombre_Municipio": "Arona",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38006,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38007,
+    "Nombre_Municipio": "Barlovento",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38007,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38008,
+    "Nombre_Municipio": "Breña Alta",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38008,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38009,
+    "Nombre_Municipio": "Breña Baja",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38009,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38010,
+    "Nombre_Municipio": "Buenavista del Norte",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38010,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38011,
+    "Nombre_Municipio": "Candelaria",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38011,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38012,
+    "Nombre_Municipio": "Fasnia",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38012,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38013,
+    "Nombre_Municipio": "Frontera",
+    "Nombre_Isla": "El Hierro",
+    "Codigo_Municipal_ISTAC": 38013,
+    "Codigo_Isla_INE": 382
+  },
+  {
+    "Codigo_Municipal_Catastral": 38014,
+    "Nombre_Municipio": "Fuencaliente",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38014,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38015,
+    "Nombre_Municipio": "Garachico",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38015,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38016,
+    "Nombre_Municipio": "Garafía",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38016,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38017,
+    "Nombre_Municipio": "Granadilla de Abona",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38017,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38018,
+    "Nombre_Municipio": "La Guancha",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38018,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38019,
+    "Nombre_Municipio": "Guía de Isora",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38019,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38020,
+    "Nombre_Municipio": "Güímar",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38020,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38021,
+    "Nombre_Municipio": "Hermigua",
+    "Nombre_Isla": "La Gomera",
+    "Codigo_Municipal_ISTAC": 38021,
+    "Codigo_Isla_INE": 381
+  },
+  {
+    "Codigo_Municipal_Catastral": 38022,
+    "Nombre_Municipio": "Icod de los Vinos",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38022,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38023,
+    "Nombre_Municipio": "La Laguna",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38023,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38024,
+    "Nombre_Municipio": "Los Llanos de Aridane",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38024,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38025,
+    "Nombre_Municipio": "La Matanza de Acentejo",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38025,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38026,
+    "Nombre_Municipio": "La Orotava",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38026,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38027,
+    "Nombre_Municipio": "El Paso",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38027,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38028,
+    "Nombre_Municipio": "Puerto de la Cruz",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38028,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38029,
+    "Nombre_Municipio": "Puntagorda",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38029,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38030,
+    "Nombre_Municipio": "Puntallana",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38030,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38031,
+    "Nombre_Municipio": "Los Realejos",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38031,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38032,
+    "Nombre_Municipio": "El Rosario",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38032,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38033,
+    "Nombre_Municipio": "San Andrés y Sauces",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38033,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38034,
+    "Nombre_Municipio": "San Juan de la Rambla",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38034,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38035,
+    "Nombre_Municipio": "San Miguel de Abona",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38035,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38036,
+    "Nombre_Municipio": "San Sebastián de la Gomera",
+    "Nombre_Isla": "La Gomera",
+    "Codigo_Municipal_ISTAC": 38036,
+    "Codigo_Isla_INE": 381
+  },
+  {
+    "Codigo_Municipal_Catastral": 38037,
+    "Nombre_Municipio": "Santa Cruz de la Palma",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38037,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38900,
+    "Nombre_Municipio": "Santa Cruz de Tenerife",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38038,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38039,
+    "Nombre_Municipio": "Santa Úrsula",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38039,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38040,
+    "Nombre_Municipio": "Santiago del Teide",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38040,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38041,
+    "Nombre_Municipio": "El Sauzal",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38041,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38042,
+    "Nombre_Municipio": "Los Silos",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38042,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38043,
+    "Nombre_Municipio": "Tacoronte",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38043,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38044,
+    "Nombre_Municipio": "El Tanque",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38044,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38045,
+    "Nombre_Municipio": "Tazacorte",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38045,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38046,
+    "Nombre_Municipio": "Tegueste",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38046,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38047,
+    "Nombre_Municipio": "Tijarafe",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38047,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38048,
+    "Nombre_Municipio": "Valverde",
+    "Nombre_Isla": "El Hierro",
+    "Codigo_Municipal_ISTAC": 38048,
+    "Codigo_Isla_INE": 382
+  },
+  {
+    "Codigo_Municipal_Catastral": 38049,
+    "Nombre_Municipio": "Valle Gran Rey",
+    "Nombre_Isla": "La Gomera",
+    "Codigo_Municipal_ISTAC": 38049,
+    "Codigo_Isla_INE": 381
+  },
+  {
+    "Codigo_Municipal_Catastral": 38050,
+    "Nombre_Municipio": "Vallehermoso",
+    "Nombre_Isla": "La Gomera",
+    "Codigo_Municipal_ISTAC": 38050,
+    "Codigo_Isla_INE": 381
+  },
+  {
+    "Codigo_Municipal_Catastral": 38051,
+    "Nombre_Municipio": "La Victoria de Acentejo",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38051,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38052,
+    "Nombre_Municipio": "Vilaflor",
+    "Nombre_Isla": "Tenerife",
+    "Codigo_Municipal_ISTAC": 38052,
+    "Codigo_Isla_INE": 384
+  },
+  {
+    "Codigo_Municipal_Catastral": 38053,
+    "Nombre_Municipio": "Villa de Mazo",
+    "Nombre_Isla": "La Palma",
+    "Codigo_Municipal_ISTAC": 38053,
+    "Codigo_Isla_INE": 383
+  },
+  {
+    "Codigo_Municipal_Catastral": 38054,
+    "Nombre_Municipio": "El Pinar",
+    "Nombre_Isla": "El Hierro",
+    "Codigo_Municipal_ISTAC": 38901,
+    "Codigo_Isla_INE": 382
+  }
+]
