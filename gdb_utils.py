@@ -27,9 +27,10 @@ class GDBProcessor:
         print(f"\nConfiguración de procesamiento:")
         print(f"Workers configurados: {self.max_workers} (1 por chunk)")
 
+    # Administrador de contexto para cambios de espacio de trabajo
     @contextmanager
     def _managed_workspace(self, workspace):
-        """Context manager for workspace changes"""
+        """Mantiene el espacio de trabajo original y lo restaura al final"""
         original = arcpy.env.workspace
         try:
             arcpy.env.workspace = workspace
@@ -228,9 +229,10 @@ class GDBProcessor:
             except Exception as e:
                 print(f"Error merging {feature}: {str(e)}")
 
+    # Limpieza de directorios temporales, método estático para evitar dependencias
     @staticmethod
     def _cleanup_temp_dir(temp_dir):
-        """Clean up temporary directory and resources with retry mechanism"""
+        """Limpiar directorios temporales con reintentos"""
         if not os.path.exists(temp_dir):
             return
 
