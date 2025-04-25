@@ -2,9 +2,9 @@
 import time
 import os
 import json
-from zip_utils import ZipExtractor
-from file_utils import FileOrganizer
-from gdb_utils import GDBProcessor
+from utils.zip_utils import ZipExtractor
+from utils.file_utils import FileOrganizer
+from utils.gdb_utils import GDBProcessor
 
 def load_config(path="config.json"):
     with open(path, 'r', encoding='utf-8') as f:
@@ -21,10 +21,10 @@ def main():
     start_time = time.time()
 
     try:
-        # Load from config.json in the current directory
+        # Subir configuración de JSON en el directorio actual
         config = load_config()
 
-        # Extract and organize files
+        # Extraer y organizar archivos
         zip_extractor = ZipExtractor()
         file_organizer = FileOrganizer()
 
@@ -32,7 +32,7 @@ def main():
         print("\nOrganizando archivos en categorías Rústico/Urbano...")
         file_organizer.organize_files(config["output"])
 
-        # Process GDB
+        # Procesar GDB
         print("\nIniciando procesamiento de GDB...")
         input_dirs = [
             os.path.join(config["output"], "Rústico"),

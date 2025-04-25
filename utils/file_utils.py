@@ -8,6 +8,14 @@ class FileOrganizer:
     """
     
     def __init__(self):
+        """
+        Inicialización con constantes y configuración:
+        
+        Atributos:
+            RUSTICO_CODE (str): Código identificador para archivos rústicos ('RA')
+            URBANO_CODE (str): Código identificador para archivos urbanos ('UA')
+            CATEGORY_DIRS (dict): Mapeo de códigos a nombres de directorios
+        """
         self.RUSTICO_CODE = "RA"
         self.URBANO_CODE = "UA"
         self.CATEGORY_DIRS = {
@@ -21,23 +29,29 @@ class FileOrganizer:
         
         Args:
             base_dir (str): Directorio base que contiene los archivos extraídos
+        
+        Proceso:
+        1. Crea directorios por categoría
+        2. Recorre subdirectorios recursivamente
+        3. Clasifica y mueve archivos según categoría
+        4. Limpia directorios temporales
         """
-        # Create category directories
+        # Crear directorios de categorías
         category_paths = self._create_category_dirs(base_dir)
         
-        # Walk through all subdirectories
+        # Recorrer subdirectorios
         for root, _, _ in os.walk(base_dir):
             if any(category in root for category in self.CATEGORY_DIRS.values()):
-                continue  # Skip if we're already in a category directory
+                continue  # Saltar directorios de categorías ya creados
                 
             folder_name = os.path.basename(root)
             category = self._get_category(folder_name)
             
             if category:
                 target_dir = category_paths[category]
-                # First move the contents
+                # Mover contenidos a su directorio destino
                 self._move_contents(root, target_dir)
-                # Then rename files in the target directories
+                # Renombrar archivos en el directorio de destino
                 for item in os.listdir(target_dir):
                     item_path = os.path.join(target_dir, item)
                     if os.path.isdir(item_path):
@@ -49,7 +63,15 @@ class FileOrganizer:
                 shutil.rmtree(item_path)
 
     def _create_category_dirs(self, base_dir):
-        """Creates and returns paths for Rustico and Urbano directories."""
+        """
+        Crea y devuelve rutas para directorios Rústico y Urbano.
+        
+        Args:
+            base_dir (str): Directorio base donde crear subcarpetas
+        
+        Returns:
+            dict: Diccionario con rutas de categorías creadas
+        """
         category_paths = {}
         for code, category in self.CATEGORY_DIRS.items():
             path = os.path.join(base_dir, category)
@@ -58,14 +80,32 @@ class FileOrganizer:
         return category_paths
 
     def _get_category(self, folder_name):
-        """Determines if a folder is Rústico or Urbano based on its name."""
+        """
+        Determina si una carpeta es Rústica o Urbana según su nombre.
+        
+        Args:
+            folder_name (str): Nombre de la carpeta a analizar
+            
+        Returns:
+            str: Nombre de la categoría o None si no coincide
+        """
         if len(folder_name) >= 5:
             type_code = folder_name[3:5]
             return self.CATEGORY_DIRS.get(type_code)
         return None
 
     def _move_contents(self, source_dir, target_dir):
-        """Moves contents to their target directory."""
+        """
+        Mueve contenidos a su directorio destino.
+        
+        Args:
+            source_dir (str): Directorio origen
+            target_dir (str): Directorio destino
+        
+        Comportamiento:
+        - Fusiona contenidos si el destino existe
+        - Mueve carpetas completas si no existe el destino
+        """
         for item in os.listdir(source_dir):
             src_path = os.path.join(source_dir, item)
             if not os.path.isdir(src_path):
@@ -81,16 +121,20 @@ class FileOrganizer:
                     if not os.path.exists(content_dst):
                         shutil.move(content_src, content_dst)
             else:
-                # Move entire folder if destination doesn't exist
+                # Mover carpeta completa si no existe el destino
                 shutil.move(src_path, dst_path)
 
     def _rename_files_in_directory(self, directory):
         """
-        Renombra los archivos dentro de un directorio usando los primeros 7 caracteres
-        del nombre del directorio como prefijo.
+        Renombra archivos usando los primeros 7 caracteres del directorio como prefijo.
         
         Args:
-            directory (str): Directorio que contiene los archivos a renombrar
+            directory (str): Directorio con archivos a renombrar
+    
+        Proceso:
+        1. Extrae prefijo del nombre del directorio
+        2. Renombra solo archivos (no directorios)
+        3. Excluye archivos ZIP del proceso
         """
         dir_name = os.path.basename(directory)
         prefix = dir_name[:7] + "_"

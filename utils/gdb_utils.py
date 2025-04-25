@@ -3,16 +3,35 @@ import arcpy
 import os
 import multiprocessing
 from contextlib import contextmanager
-from add_info import CadastralInfoManager
+from utils.add_info import CadastralInfoManager
 
 class GDBProcessor:
+    """
+    Clase para procesar y gestionar Geodatabases (GDB) con las siguientes capacidades:
+    - Procesamiento en paralelo de chunks
+    - Gestión de datasets rústicos y urbanos
+    - Manejo de múltiples features catastrales
+    - Control automático de espacios de trabajo
+    """
+
     def __init__(self):
-        # Define constants
+        """
+        Inicialización con constantes y configuración:
+        
+        Atributos:
+            RUSTICO_DATASET (str): Nombre del dataset rústico
+            URBANO_DATASET (str): Nombre del dataset urbano
+            DATASETS (list): Lista de datasets disponibles
+            FEATURES (list): Lista de features catastrales
+            SPATIAL_REF: Referencia espacial (32628)
+            MUNICIPAL_CODE_FIELD (str): Campo de código municipal
+            CHUNKS_PER_TYPE (int): Chunks por tipo de dataset
+            max_workers (int): Número máximo de workers paralelos
+        """
         self.RUSTICO_DATASET = "Rustico"
         self.URBANO_DATASET = "Urbano"
         self.DATASETS = [self.RUSTICO_DATASET, self.URBANO_DATASET]
         
-        # Single definition for features
         self.FEATURES = ["ALTIPUN", "CONSTRU", "EJES", "ELEMLIN", 
                         "ELEMPUN", "ELEMTEX", "HOJAS", "LIMITES", 
                         "MAPA", "MASA", "PARCELA", "SUBPARCE"]
@@ -20,9 +39,8 @@ class GDBProcessor:
         self.SPATIAL_REF = arcpy.SpatialReference(32628)
         self.MUNICIPAL_CODE_FIELD = "Codigo_Municipal_Catastral"
         
-        # Set chunks and workers
         self.CHUNKS_PER_TYPE = 4
-        self.max_workers = self.CHUNKS_PER_TYPE * 2  # 8 total chunks
+        self.max_workers = self.CHUNKS_PER_TYPE * 2 
         
         print(f"\nConfiguración de procesamiento:")
         print(f"Workers configurados: {self.max_workers} (1 por chunk)")
@@ -30,7 +48,17 @@ class GDBProcessor:
     # Administrador de contexto para cambios de espacio de trabajo
     @contextmanager
     def _managed_workspace(self, workspace):
-        """Mantiene el espacio de trabajo original y lo restaura al final"""
+        """
+        Gestiona cambios de espacio de trabajo.
+        
+        Args:
+            workspace (str): Espacio de trabajo temporal
+        
+        Comportamiento:
+        - Guarda workspace original
+        - Cambia al nuevo workspace
+        - Restaura workspace original al finalizar
+        """
         original = arcpy.env.workspace
         try:
             arcpy.env.workspace = workspace
@@ -39,17 +67,30 @@ class GDBProcessor:
             arcpy.env.workspace = original
 
     def process_directory(self, input_dirs, final_gdb):
-        """Process directories using chunking strategy"""
+        """
+        Procesa directorios usando estrategia de chunks.
+        
+        Args:
+            input_dirs (list): Lista de directorios de entrada
+            final_gdb (str): Ruta de la geodatabase final
+        
+        Proceso:
+        1. Crea directorio temporal
+        2. Genera chunks balanceados
+        3. Procesa chunks en paralelo
+        4. Combina resultados en GDB final
+        5. Limpia archivos temporales
+        """
         base_temp_dir = os.path.join(os.path.dirname(final_gdb), "temp_processing")
         chunk_temp_dir = os.path.join(base_temp_dir, "chunks")
         try:
             os.makedirs(chunk_temp_dir, exist_ok=True)
             
-            # Create and process chunks
+            # Crear y procesar chunks
             chunk_gdbs = self._create_balanced_chunks(input_dirs, chunk_temp_dir)
             print(f"\nChunks creados: {len(chunk_gdbs)}")
             
-            # Process chunks in parallel
+            # Procesar chunks en paralelo
             with multiprocessing.Pool(processes=self.max_workers) as pool:
                 tasks = [(input_files, gdb_path) for gdb_path, input_files in chunk_gdbs.items()]
                 results = pool.starmap(self._process_chunk_gdb, tasks)
@@ -57,7 +98,7 @@ class GDBProcessor:
             if not any(results):
                 raise Exception("No chunks processed successfully")
 
-            # Merge chunks into final GDB
+            # Fusionar chunks en GDB final
             print("\nMerging chunks into final GDB...")
             self._merge_final_gdbs(chunk_gdbs.keys(), final_gdb)
 
@@ -65,7 +106,7 @@ class GDBProcessor:
             print("\nCompactando geodatabase final...")
             arcpy.management.Compact(final_gdb)
             
-            # Only cleanup after successful merge
+            # Limpieza de directorios temporales
             print("\nLimpiando directorios temporales...")
             self._cleanup_temp_dir(base_temp_dir)
                 
@@ -74,12 +115,29 @@ class GDBProcessor:
             raise
 
     def _create_balanced_chunks(self, input_dirs, temp_dir):
-        """Create balanced chunks based on file sizes"""
+        """
+        Crea chunks balanceados basados en tamaños de archivo.
+
+        Args:
+            input_dirs (list): Lista de directorios que contienen archivos shapefile
+            temp_dir (str): Directorio temporal para almacenar las GDBs de chunks
+
+        Returns:
+            dict: Diccionario con rutas de GDB como claves y listas de archivos como valores
+
+        Proceso:
+        1. Para cada directorio de entrada:
+            - Detecta si es rústico o urbano
+            - Calcula offset basado en el índice
+            - Recopila archivos y tamaños
+            - Distribuye archivos en chunks equilibrados
+            - Crea GDBs para cada chunk
+        """
         chunk_gdbs = {}
         
         for idx, input_dir in enumerate(input_dirs):
             print(f"\nProcesando directorio: {input_dir}")
-            # Fix prefix detection
+            # Detección de prefijo
             is_rustico = any(r in input_dir for r in ["Rustico", "Rústico"])
             prefix = "R" if is_rustico else "U"
             chunk_offset = idx * self.CHUNKS_PER_TYPE
@@ -89,7 +147,7 @@ class GDBProcessor:
             print(f"Prefijo: {prefix}")
             print(f"Offset: {chunk_offset}")
             
-            # Collect files with sizes
+            # Recopilar archivos y tamaños
             files_with_size = []
             total_size = 0
             for root, _, files in os.walk(input_dir):
@@ -100,17 +158,17 @@ class GDBProcessor:
                         files_with_size.append((path, size))
                         total_size += size
             
-            # Create chunks based on total size
+            # Crear chunks balanceados por tamaño
             chunks = [[] for _ in range(self.CHUNKS_PER_TYPE)]
             chunk_sizes = [0] * self.CHUNKS_PER_TYPE
             
-            # Sort by size descending for better distribution
+            # Ordenar archivos por tamaño
             for file_path, size in sorted(files_with_size, key=lambda x: x[1], reverse=True):
                 smallest_idx = chunk_sizes.index(min(chunk_sizes))
                 chunks[smallest_idx].append(file_path)
                 chunk_sizes[smallest_idx] += size
             
-            # Create GDBs with unique names
+            # Crear GDBs para cada chunk
             for i, chunk_files in enumerate(chunks):
                 if chunk_files:
                     total_chunk_size = sum(os.path.getsize(f) for f in chunk_files)
@@ -127,15 +185,33 @@ class GDBProcessor:
         return chunk_gdbs
 
     def _process_chunk_gdb(self, input_files, chunk_gdb):
-        """Process a single chunk GDB independently"""
+        """
+        Procesa una GDB de chunk de forma independiente.
+
+        Args:
+            input_files (list): Lista de archivos shapefile a procesar
+            chunk_gdb (str): Ruta de la geodatabase de chunk
+
+        Returns:
+            bool: True si el procesamiento fue exitoso, False en caso de error
+
+        Proceso:
+        1. Configuración inicial de workspace
+        2. Creación de datasets
+        3. Importación de shapefiles
+        4. Configuración de códigos municipales
+        5. Creación de feature classes
+        6. Append de feature classes
+        7. Actualización de información catastral
+        """
         try:
             print(f"\nProcesando chunk GDB: {chunk_gdb}")
             with self._managed_workspace(chunk_gdb):
-                # 1. Create datasets first
+                # 1. Crear datasets
                 self._create_datasets(chunk_gdb)
                 print("Datasets creados")
 
-                # 2. Import shapefiles
+                # 2. Importar shapefiles
                 for shp_path in input_files:
                     try:
                         base_name = os.path.splitext(os.path.basename(shp_path))[0]
@@ -152,11 +228,11 @@ class GDBProcessor:
                         print(f"Error importando {shp_path}: {str(e)}")
                         continue
                 
-                # 3. Setup municipal codes
+                # 3. Configurar códigos municipales
                 self._setup_municipal_code_field(chunk_gdb)
                 print("Códigos municipales configurados")
                 
-                # 4. Create feature classes
+                # 4. Crear feature classes
                 self._create_feature_classes(chunk_gdb)
                 print("Feature classes creadas")
                 
@@ -164,7 +240,7 @@ class GDBProcessor:
                 self._append_feature_classes(chunk_gdb)
                 print("Append completado")
                 
-                # 6. Add and update cadastral information
+                # 6. Añadir y actualizar información catastral
                 json_path = os.path.join(os.path.dirname(__file__), "cod_catastrales.json")
                 if os.path.exists(json_path):
                     cadastral_manager = CadastralInfoManager(chunk_gdb, json_path)
@@ -175,7 +251,7 @@ class GDBProcessor:
                 else:
                     print("Warning: cod_catastrales.json not found, skipping cadastral info update")
                 
-                # 7. Clear workspace before returning
+                # 7. Limpeza de workspace antes de finalizar
                 arcpy.env.workspace = None
                 return True
                 
@@ -183,11 +259,22 @@ class GDBProcessor:
             print(f"Error processing chunk {chunk_gdb}: {str(e)}")
             return False
         finally:
-            # Ensure workspace is cleared
+            # Asegurar que el espacio de trabajo está limpio
             arcpy.env.workspace = None
 
     def _merge_final_gdbs(self, chunk_gdbs, final_gdb):
-        """Sequential merge of all chunk GDBs"""
+        """
+        Combina todas las GDBs de chunks.
+        
+        Args:
+            chunk_gdbs (list): Lista de GDBs de chunks
+            final_gdb (str): Ruta de GDB final
+        
+        Proceso:
+        1. Crea GDB final si no existe
+        2. Crea datasets necesarios
+        3. Combina features por tipo y dataset
+        """
         if not arcpy.Exists(final_gdb):
             arcpy.CreateFileGDB_management(
                 os.path.dirname(final_gdb),
@@ -206,7 +293,22 @@ class GDBProcessor:
             raise
 
     def _merge_feature_type(self, chunk_gdbs, final_gdb, dataset, feature):
-        """Merge a single feature type from all chunks"""
+        """
+        Combina un tipo específico de feature desde todos los chunks en la GDB final.
+
+        Args:
+            chunk_gdbs (list): Lista de GDBs de chunks a combinar
+            final_gdb (str): Ruta de la geodatabase final
+            dataset (str): Nombre del dataset ('Rustico' o 'Urbano')
+            feature (str): Tipo de feature a combinar ('ALTIPUN', 'CONSTRU', etc.)
+
+        Comportamiento:
+        1. Construye rutas de feature classes objetivo y fuente
+        2. Recopila feature classes existentes de los chunks
+        3. Realiza conversión directa si hay una sola fuente
+        4. Ejecuta merge si hay múltiples fuentes
+        5. Manejo de errores por feature class
+        """
         target_fc = os.path.join(final_gdb, dataset, f"{dataset}_{feature}")
         source_fcs = []
         
@@ -229,41 +331,51 @@ class GDBProcessor:
             except Exception as e:
                 print(f"Error merging {feature}: {str(e)}")
 
-    # Limpieza de directorios temporales, método estático para evitar dependencias
     @staticmethod
     def _cleanup_temp_dir(temp_dir):
-        """Limpiar directorios temporales con reintentos"""
+        """
+        Limpia directorios temporales.
+        
+        Args:
+            temp_dir (str): Directorio a limpiar
+        
+        Características:
+        - Reintentos automáticos
+        - Limpieza de archivos .lock
+        - Verificación de eliminación
+        - Reporte de errores detallado
+        """
         if not os.path.exists(temp_dir):
             return
 
-        # Clear workspace and cache
+        # Limpiar workspace y cache
         arcpy.env.workspace = None
         arcpy.ClearWorkspaceCache_management()
     
-        # Import needed modules
+        # Importar módulos necesarios
         import time
         import shutil
         from pathlib import Path
 
         max_retries = 3
-        retry_delay = 2  # seconds
+        retry_delay = 2  # segundos
 
         for attempt in range(max_retries):
             try:
-                # First try to remove lock files
+                # Primero intentar eliminar archivos .lock
                 for lock_file in Path(temp_dir).rglob("*.lock"):
                     try:
                         lock_file.unlink()
                     except:
                         pass
 
-                # Wait for resources to be released
+                # Esperar a que los archivos se liberen
                 time.sleep(retry_delay)
             
-                # Try to remove the directory
+                # Intentar eliminar el directorio temporal
                 shutil.rmtree(temp_dir, ignore_errors=True)
             
-                # Verify removal
+                # Verificar si el directorio fue eliminado
                 if not os.path.exists(temp_dir):
                     print("Limpieza completada con éxito")
                     return
@@ -276,7 +388,7 @@ class GDBProcessor:
                     print(f"No se pudo limpiar completamente después de {max_retries} intentos")
                     print(f"Error final: {str(e)}")
                 
-                    # List remaining lock files for debugging
+                    # Listar archivos bloqueados si la limpieza falla
                     try:
                         for lock_file in Path(temp_dir).rglob("*.lock"):
                             print(f"Archivo bloqueado: {lock_file}")
@@ -284,6 +396,19 @@ class GDBProcessor:
                         pass
 
     def _setup_municipal_code_field(self, gdb_path):
+        """
+        Configura y actualiza el campo de código municipal en todas las feature classes.
+
+        Args:
+            gdb_path (str): Ruta de la geodatabase a procesar
+
+        Proceso:
+        1. Configura workspace temporal
+        2. Itera sobre feature classes
+        3. Añade campo de código municipal si no existe
+        4. Extrae y actualiza códigos municipales
+        5. Manejo de errores por feature class
+        """
         arcpy.env.workspace = gdb_path
 
         for fc in arcpy.ListFeatureClasses():
@@ -324,6 +449,9 @@ class GDBProcessor:
                     raise
 
     def _create_feature_classes(self, gdb_path):
+        """
+        Crea feature classes en los datasets especificados.
+        """
         arcpy.env.workspace = gdb_path
 
         for dataset in self.DATASETS:
@@ -342,7 +470,9 @@ class GDBProcessor:
                         print(f"Feature class creada: {fc_name}")
 
     def _append_feature_classes(self, gdb_path):
-        """Sequential append of feature classes with geometry validation"""
+        """
+        Append secuencial a los feature classes de los datasets.
+        """
         with self._managed_workspace(gdb_path):
             for dataset in self.DATASETS:
                 dataset_path = os.path.join(gdb_path, dataset)
@@ -352,10 +482,10 @@ class GDBProcessor:
                     if not arcpy.Exists(target_fc):
                         continue
 
-                    # Get target geometry type
+                    # Adquirir tipo de geometría
                     target_geom = arcpy.Describe(target_fc).shapeType
                     
-                    # Filter source features by matching geometry
+                    # Filtrar feature class de origen por geometría
                     source_fcs = []
                     for fc in arcpy.ListFeatureClasses():
                         if feature in fc.upper() and fc != os.path.basename(target_fc):
@@ -374,21 +504,21 @@ class GDBProcessor:
 
     def _find_template(self, gdb_path, feature_type):
         """
-        Find template feature class with matching geometry type.
-        Special handling for ALTIPUN to ensure Point geometry.
+        Encontrar el template de feature class para un tipo específico.
+        Maneja casos especiales como ALTIPUN.
         """
         arcpy.env.workspace = gdb_path
         feature_type_upper = feature_type.upper()
 
-        # Get all potential matches
+        # Adquirir posibles templates
         matches = [fc for fc in arcpy.ListFeatureClasses() if feature_type_upper in fc.upper()]
         
         if not matches:
             return None
 
-        # Special handling for ALTIPUN
+        # Manejo de excepción ALTIPUN
         if feature_type_upper == "ALTIPUN":
-            # Try to find Point geometry first
+            # Búsqueda de geometría Point
             for fc in matches:
                 try:
                     desc = arcpy.Describe(fc)
@@ -400,7 +530,7 @@ class GDBProcessor:
             
             print(f"Warning: No Point geometry found for {feature_type}, using first available template")
         
-        # For non-ALTIPUN or if no Point geometry found
+        # Para los casos generales, usar el primer match
         first_match = matches[0]
         geometry_type = arcpy.Describe(first_match).shapeType
         print(f"Using template for {feature_type}: {first_match} ({geometry_type})")

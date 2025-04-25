@@ -21,6 +21,16 @@ class ZipExtractor:
         Args:
             input_dir (str): Ruta del directorio que contiene los archivos ZIP
             output_dir (str, opcional): Directorio donde se guardarán los archivos extraídos.
+                                  Si no se especifica, usa el directorio de entrada.
+        
+        Comportamiento:
+        1. Verifica si el directorio de entrada existe
+        2. Localiza todos los archivos .zip en el directorio
+        3. Crea un ThreadPool para procesamiento paralelo
+        4. Para cada ZIP:
+           - Crea un subdirectorio con el nombre del ZIP
+           - Extrae el contenido usando extract_nested_zip()
+           - Procesa recursivamente cualquier ZIP encontrado
         """
         if not os.path.isdir(input_dir):
             print(f"El directorio {input_dir} no existe.")
@@ -29,7 +39,7 @@ class ZipExtractor:
         output_dir = output_dir or input_dir
         files = [f for f in os.listdir(input_dir) if f.lower().endswith('.zip')]
 
-        # Process ZIP files in parallel
+        # Procesar archivos ZIP en paralelo
         with ThreadPoolExecutor() as executor:
             futures = []
             for file in files:
@@ -42,7 +52,7 @@ class ZipExtractor:
                     executor.submit(self.extract_nested_zip, input_zip, zip_output_dir)
                 )
             
-            # Wait for all extractions to complete
+            # Espera a que todas las tareas se completen
             for future in futures:
                 zip_output_dir = future.result()
                 if zip_output_dir and os.path.exists(zip_output_dir):
@@ -53,13 +63,22 @@ class ZipExtractor:
     def extract_nested_zip(self, input_zip, output_dir):
         """
         Extrae un archivo ZIP que contiene un único ZIP anidado.
-        Maneja el caso especial de archivos ZIP divididos (.z01).
         
         Args:
             input_zip (str): Ruta del archivo ZIP a extraer
             output_dir (str): Directorio donde se extraerá el contenido
+        
         Returns:
-            str: Directorio de salida si la extracción fue exitosa, None en caso contrario
+            str: Directorio de salida si la extracción fue exitosa
+            None: Si ocurre algún error
+        
+        Proceso:
+        1. Verifica existencia del archivo
+        2. Crea directorio temporal
+        3. Extrae el ZIP principal
+        4. Busca ZIPs anidados
+        5. Maneja casos especiales (.z01)
+        6. Limpia archivos temporales
         """
         if not os.path.isfile(input_zip):
             print(f"El archivo {input_zip} no existe o no es un archivo válido.")
@@ -109,10 +128,16 @@ class ZipExtractor:
 
     def extract_all_zips_in_subdirectories(self, output_dir):
         """
-        Extrae todos los archivos ZIP en los subdirectorios, manteniendo la estructura de carpetas.
+        Extrae recursivamente todos los ZIPs en subdirectorios.
         
         Args:
             output_dir (str): Directorio base donde buscar archivos ZIP
+        
+        Proceso:
+        1. Recorre recursivamente todos los subdirectorios
+        2. Identifica archivos ZIP
+        3. Extrae en paralelo usando ThreadPoolExecutor
+        4. Elimina los ZIPs procesados
         """
         def extract_zip(zip_path, extract_folder):
             try:
@@ -122,7 +147,7 @@ class ZipExtractor:
             except zipfile.BadZipFile:
                 print(f"Archivo ZIP inválido: {zip_path}")
 
-        # Collect all ZIP files and their target folders
+        # Adquirir todos los archivos ZIP y sus subdirectorios de destino
         zip_tasks = []
         for folder_path, _, _ in os.walk(output_dir):
             zip_files = [f for f in os.listdir(folder_path) if f.lower().endswith('.zip')]
@@ -130,16 +155,20 @@ class ZipExtractor:
                 zip_path = os.path.join(folder_path, zip_file)
                 zip_tasks.append((zip_path, folder_path))
         
-        # Process ZIP files in parallel
+        # Procesar archivos ZIP en paralelo
         with ThreadPoolExecutor() as executor:
             executor.map(lambda x: extract_zip(*x), zip_tasks)
 
     def _cleanup_directory(self, directory):
         """
-        Elimina un directorio y todo su contenido, solo si es un directorio temporal.
+        Elimina directorios temporales y su contenido.
         
         Args:
             directory (str): Directorio a eliminar
+        
+        Seguridad:
+        - Solo elimina directorios que contengan "temp_extracted" o "nested_temp"
+        - Elimina archivos y subdirectorios de forma segura
         """
         if "temp_extracted" in directory or "nested_temp" in directory:
             for root, dirs, files in os.walk(directory, topdown=False):
