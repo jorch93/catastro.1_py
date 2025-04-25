@@ -1,0 +1,9 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Ignore all __pycache__ in subfolders
+**/__pycache__/
+
+# Optional: ignore VSCode settings (if you want)
+.vscode/
