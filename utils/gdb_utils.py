@@ -39,11 +39,25 @@ class GDBProcessor:
         self.SPATIAL_REF = arcpy.SpatialReference(32628)
         self.MUNICIPAL_CODE_FIELD = "Codigo_Municipal_Catastral"
         
-        self.CHUNKS_PER_TYPE = 4
-        self.max_workers = self.CHUNKS_PER_TYPE * 2 
+        # Configuración de procesamiento segura
+        cpu_count = multiprocessing.cpu_count()
+        cpu_percent = 0.70  # 70% utilización
+        MIN_FREE_CORES = 2  # Mínimo cores libres
+        
+        # Calcular cores disponibles manteniendo mínimo libre
+        used_cores = int(cpu_count * cpu_percent)
+        free_cores = cpu_count - used_cores
+        if free_cores < MIN_FREE_CORES:
+            used_cores = cpu_count - MIN_FREE_CORES
+        
+        self.CHUNKS_PER_TYPE = max(2, used_cores // 2)
+        self.max_workers = used_cores
         
         print(f"\nConfiguración de procesamiento:")
-        print(f"Workers configurados: {self.max_workers} (1 por chunk)")
+        print(f"CPUs totales: {cpu_count}")
+        print(f"CPUs utilizados: {used_cores} ({int(used_cores/cpu_count * 100)}%)")
+        print(f"CPUs libres: {cpu_count - used_cores}")
+        print(f"Chunks por tipo: {self.CHUNKS_PER_TYPE}")
 
     # Administrador de contexto para cambios de espacio de trabajo
     @contextmanager
