@@ -255,15 +255,11 @@ class GDBProcessor:
                 print("Append completado")
                 
                 # 6. Añadir y actualizar información catastral
-                json_path = os.path.join(os.path.dirname(__file__), "cod_catastrales.json")
-                if os.path.exists(json_path):
-                    cadastral_manager = CadastralInfoManager(chunk_gdb, json_path)
-                    for dataset in self.DATASETS:
-                        print(f"\nUpdating cadastral info for {dataset}...")
-                        cadastral_manager.process_feature_classes(self.FEATURES, dataset)
-                    print("Cadastral info update completado")
-                else:
-                    print("Warning: cod_catastrales.json not found, skipping cadastral info update")
+                cadastral_manager = CadastralInfoManager(chunk_gdb, "cod_catastrales.json")
+                for dataset in self.DATASETS:
+                    print(f"\nUpdating cadastral info for {dataset}...")
+                    cadastral_manager.process_feature_classes(self.FEATURES, dataset)
+                print("Cadastral info update completado")
                 
                 # 7. Limpeza de workspace antes de finalizar
                 arcpy.env.workspace = None

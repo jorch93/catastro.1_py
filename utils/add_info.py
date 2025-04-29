@@ -13,6 +13,16 @@ class CadastralInfoManager:
         """
         self.workspace = workspace
         arcpy.env.workspace = workspace
+
+        # Resolver ruta al JSON si es relativa
+        if not os.path.isabs(json_path):
+            json_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),  # Subir un nivel desde utils
+                json_path
+            )
+    
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f"No se encuentra el archivo JSON en: {json_path}")
         
         # Sube los códigos catastrales desde el JSON
         with open(json_path, 'r', encoding='utf-8') as f:
