@@ -5,6 +5,7 @@ import json
 from utils.zip_utils import ZipExtractor
 from utils.file_utils import FileOrganizer
 from utils.gdb_utils import GDBProcessor
+from utils.dbf_utils import DBFProcessor
 
 def load_config(path="config.json"):
     with open(path, 'r', encoding='utf-8') as f:
@@ -42,6 +43,12 @@ def main():
         processor = GDBProcessor()
         processor.process_directory(input_dirs, config["gdb"])
         print("\nProcesamiento GDB completado con éxito")
+
+        # Procesar tablas DBF después de GDB
+        print("\nIniciando procesamiento de tablas DBF...")
+        dbf_processor = DBFProcessor()
+        dbf_processor.process_directory(input_dirs, config["gdb"])
+        print("\nProcesamiento DBF completado con éxito")
 
     except Exception as e:
         print(f"\nError durante el procesamiento: {str(e)}")
