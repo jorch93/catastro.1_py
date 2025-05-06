@@ -63,6 +63,14 @@ class DBFProcessor:
                 for item in json_array  
             }
 
+        # Definición de campos a añadir
+        self.field_definitions = {
+            'Nombre_Municipio': ('TEXT', 255, 'Nombre del Municipio'),
+            'Nombre_Isla': ('TEXT', 50, 'Nombre de la Isla'),
+            'Codigo_Municipal_ISTAC': ('LONG', None, 'Código ISTAC'),
+            'Codigo_Isla_INE': ('LONG', None, 'Código INE Isla')
+        }
+
     def process_directory(self, input_dirs, final_gdb):
         """
         Proceso principal de procesamiento de DBFs.
@@ -206,19 +214,36 @@ class DBFProcessor:
     def _add_cadastral_info(self, table, municipal_code):
         """Añadir información del JSON de códigos catastrales"""
         try:
-            # Usar el código municipal para buscar en el JSON
             code_info = self.cadastral_codes.get(str(municipal_code))
             
             if not code_info:
                 print(f"No se encuentra información para código {municipal_code}")
                 return
 
-            # Añadir campos adicionales del JSON
-            for field, value in code_info.items():
-                if field != 'Codigo_Municipal_Catastral':
-                    field_name = field[:10]  # Limitar nombre a 10 caracteres
-                    arcpy.AddField_management(table, field_name, "TEXT", field_alias=field)
-                    arcpy.CalculateField_management(table, field_name, f"'{value}'", "PYTHON3")
+            # Añadir campos usando las definiciones
+            for field_name, (field_type, field_length, field_alias) in self.field_definitions.items():
+                try:
+                    arcpy.AddField_management(
+                        table,
+                        field_name[:10],  # Limitar nombre a 10 caracteres
+                        field_type,
+                        field_length=field_length,
+                        field_alias=field_alias
+                    )
+                    
+                    # Poblar campo si existe en el JSON
+                    if field_name in code_info:
+                        value = code_info[field_name]
+                        expression = f"'{value}'" if field_type == 'TEXT' else str(value)
+                        arcpy.CalculateField_management(
+                            table, 
+                            field_name[:10],
+                            expression,
+                            "PYTHON3"
+                        )
+                
+                except Exception as e:
+                    print(f"Error añadiendo campo {field_name}: {str(e)}")
 
         except Exception as e:
             print(f"Error añadiendo información catastral: {str(e)}")
