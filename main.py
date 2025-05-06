@@ -45,7 +45,6 @@ def main():
         print("\nProcesamiento GDB completado con éxito")
 
         # Procesar tablas DBF después de GDB
-        print("\nIniciando procesamiento de tablas DBF...")
         dbf_processor = DBFProcessor()
         dbf_processor.process_directory(input_dirs, config["gdb"])
         print("\nProcesamiento DBF completado con éxito")

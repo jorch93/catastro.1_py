@@ -3,4 +3,3 @@
     "output": "# Configurar la carpeta de salida de la descarga del catastro (PATH)",
     "gdb": "# Configurar la carpeta de salida de la nueva GDB del catastro (PATH)"
   }
-  

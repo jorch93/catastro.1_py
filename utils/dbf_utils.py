@@ -2,305 +2,244 @@
 import os
 import arcpy
 import re
-import shutil
-import tempfile
+import json
 
 class DBFProcessor:
-    """
-    Clase para procesar y consolidar tablas DBF con las siguientes capacidades:
-    - Consolidación de tablas por sufijo
-    - Adición automática de códigos municipales
-    - Manejo seguro de archivos temporales
-    - Normalización de campos
-    """
-
-    def __init__(self):
+    """Procesa archivos DBF del catastro"""
+    
+    def __init__(self, json_path="cod_catastrales.json"):
         """
-        Inicialización con constantes y configuración
+        Inicializar constantes y cargar códigos catastrales
         
-        Atributos:
-            MUNICIPAL_CODE_FIELD (str): Nombre del campo de código municipal
-            SUFFIXES (list): Lista de sufijos a procesar
+        Args:
+            json_path (str): Ruta al archivo JSON con códigos catastrales (default: cod_catastrales.json)
         """
-        # Campo temporal de 8 caracteres (cumple límite de 10)
-        self.TEMP_FIELD = "COD_MUNI"
-        
-        # Campo final (se usará solo después de la conversión a GDB)
-        self.MUNICIPAL_CODE_FIELD = "Codigo_Municipal_Catastral"
-        
-        self.SUFFIX_MAPPING = {
-            "Rustico": ["rA_Carvia", "rA_RUCULTIVO", "rA_RUSUBPARCELA"],
-            "Urbano": ["uA_Carvia"]
+        # Mapeo de prefijos a datasets
+        self.PREFIX_MAPPING = {
+            "rA": "Rustico",
+            "uA": "Urbano"
         }
 
-    def _consolidate_tables(self, tables, suffix, final_gdb, dataset):
-        """
-        Consolida tablas DBF en dataset específico.
-        
-        Args:
-            tables (list): Lista de tablas a procesar
-            suffix (str): Sufijo de las tablas
-            final_gdb (str): Ruta de la geodatabase
-            dataset (str): Nombre del dataset (Rustico/Urbano)
-        """
-        if not tables:
-            return
-            
-        temp_dir = tempfile.mkdtemp(prefix="dbf_temp_")
-        try:
-            first_table = tables[0]
-            dataset_path = os.path.join(final_gdb, dataset)
-            output_table = os.path.join(dataset_path, f"{dataset}_{suffix}")
-            
-            print(f"\nProcesando tablas {suffix} en {dataset}:")
-            print(f"- Tabla inicial: {first_table[0]}")
-            
-            # Procesar primera tabla
-            modified_table = self._process_table(first_table[0], temp_dir, first_table[2])
-            if not modified_table or not os.path.exists(modified_table):
-                print(f"Error: No se pudo procesar {first_table[0]}")
-                return
-                
-            # Crear tabla en GDB
-            if arcpy.Exists(output_table):
-                arcpy.Delete_management(output_table)
-                
-            print(f"- Convirtiendo a GDB: {os.path.basename(modified_table)}")
-            try:
-                arcpy.conversion.TableToGeodatabase(modified_table, dataset_path)
-                # Renombrar si es necesario
-                temp_name = os.path.join(dataset_path, os.path.splitext(os.path.basename(modified_table))[0])
-                if arcpy.Exists(temp_name) and temp_name != output_table:
-                    arcpy.Rename_management(temp_name, output_table)
-            except arcpy.ExecuteError as e:
-                print(f"Error en conversión:")
-                print(f"- Input: {modified_table}")
-                print(f"- Output: {output_table}")
-                print(f"- Error: {str(e)}")
-                raise
+        # Define allowed table types and their patterns
+        self.ALLOWED_PATTERNS = {
+            "Carvia": r".*_Carvia\.dbf$",
+            "RUCULTIVO": r".*_RUCULTIVO\.dbf$",
+            "RUSUBPARCELA": r".*_RUSUBPARCELA\.dbf$"
+        }
 
-            # Procesar tablas adicionales
-            if len(tables) > 1:
-                modified_tables = []
-                for table, _, code in tables[1:]:
-                    processed = self._process_table(table, temp_dir, code)
-                    if processed and os.path.exists(processed):
-                        modified_tables.append(processed)
-                
-                if modified_tables:
-                    arcpy.Append_management(
-                        inputs=modified_tables,
-                        target=output_table,
-                        schema_type="TEST"
-                    )
-                    
-        finally:
-            if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir)
-
-    def process_directory(self, input_dirs, final_gdb):
-        try:
-            for dataset, input_dir in zip(["Rustico", "Urbano"], input_dirs):
-                print(f"\nProcesando {dataset}:")
-                results = {suffix: [] for suffix in self.SUFFIX_MAPPING[dataset]}
-                
-                # Encontrar archivos
-                current_results = self._find_dbf_by_suffix(input_dir, dataset)
-                for suffix in self.SUFFIX_MAPPING[dataset]:
-                    if current_results[suffix]:
-                        print(f"- Encontradas {len(current_results[suffix])} tablas {suffix}")
-                        self._consolidate_tables(
-                            current_results[suffix], 
-                            suffix, 
-                            final_gdb,
-                            dataset
-                        )
-            
-            self._normalize_fields(final_gdb)
-            
-        except Exception as e:
-            print(f"Error en proceso principal: {str(e)}")
-            raise
-
-    def _find_dbf_by_suffix(self, directory, dataset):
-        """
-        Encuentra archivos DBF por sufijo recursivamente en subdirectorios.
+        self.CODE_FIELD = "COD_MUNI"
+        self.workspace = None
         
-        Args:
-            directory (str): Directorio raíz a examinar
-            dataset (str): Tipo de dataset (Rustico/Urbano)
-        
-        Returns:
-            dict: Diccionario con sufijos como claves y listas de tuplas (ruta, nombre, código)
-        """
-        # Inicializar resultados con sufijos del dataset específico
-        results = {suffix: [] for suffix in self.SUFFIX_MAPPING[dataset]}
-        
-        if not os.path.exists(directory):
-            print(f"Error: Directorio no existe: {directory}")
-            return results
-            
-        print(f"\nBuscando en {dataset}:")
-        print(f"Directorio raíz: {directory}")
-        
-        # Recorrer subdirectorios
-        for root, dirs, files in os.walk(directory):
-            print(f"\nEscaneando subdirectorio: {os.path.basename(root)}")
-            print(f"- Subdirectorios encontrados: {len(dirs)}")
-            print(f"- Archivos encontrados: {len(files)}")
-            
-            for file in files:
-                if not file.lower().endswith('.dbf'):
-                    continue
-                    
-                file_path = os.path.join(root, file)
-                base_name = os.path.splitext(file)[0]
-                municipal_code = self._extract_municipal_code(file)
-                
-                if municipal_code is None:
-                    print(f"- Ignorando {file} (sin código municipal)")
-                    continue
-                
-                # Verificar sufijos del dataset actual
-                for suffix in self.SUFFIX_MAPPING[dataset]:
-                    if base_name.lower().endswith(suffix.lower()):
-                        results[suffix].append((file_path, base_name, municipal_code))
-                        print(f"✓ DBF válido: {file}")
-                        print(f"  Código: {municipal_code}, Sufijo: {suffix}")
-                        break
-        
-        # Resumen
-        found_files = sum(len(files) for files in results.values())
-        print(f"\nResumen de {dataset}:")
-        for suffix, files in results.items():
-            if files:
-                print(f"- {suffix}: {len(files)} archivos")
-        print(f"Total: {found_files} archivos DBF válidos")
-        
-        return results
-
-    def _extract_municipal_code(self, filename):
-        """
-        Extrae el código municipal del nombre del archivo.
-        
-        Args:
-            filename (str): Nombre del archivo
-            
-        Returns:
-            int: Código municipal o None si no se encuentra
-        """
-        pattern = re.compile(r"^(\d+)")
-        match = pattern.match(filename)
-        
-        if match:
-            try:
-                return int(match.group(1))
-            except ValueError:
-                return None
-        return None
-
-    def _process_table(self, table_path, temp_dir, municipal_code):
-        """Procesa una tabla individual."""
-        try:
-            output_path = os.path.join(temp_dir, os.path.basename(table_path))
-            shutil.copy2(table_path, output_path)
-            
-            # Verificar campo temporal existente
-            field_names = [f.name for f in arcpy.ListFields(output_path)]
-            if self.TEMP_FIELD not in field_names:
-                print(f"- Añadiendo campo temporal {self.TEMP_FIELD}")
-                try:
-                    arcpy.AddField_management(
-                        in_table=output_path,
-                        field_name=self.TEMP_FIELD,  # Using 8-char field name
-                        field_type="LONG",
-                        field_alias="Código Municipal Catastral"
-                    )
-                except arcpy.ExecuteError as e:
-                    print(f"Error añadiendo campo: {str(e)}")
-                    return None
-            
-            # Actualizar valores
-            print(f"- Actualizando código municipal: {municipal_code}")
-            with arcpy.da.UpdateCursor(output_path, [self.TEMP_FIELD]) as cursor:
-                for row in cursor:
-                    row[0] = municipal_code
-                    cursor.updateRow(row)
-                    
-            return output_path
-            
-        except Exception as e:
-            print(f"Error procesando tabla {table_path}: {str(e)}")
-            return None
-
-    def _manage_field(self, table, field_name, field_type="LONG", overwrite=True):
-        """Gestiona la creación o modificación de campos."""
-        if overwrite and field_name in [f.name for f in arcpy.ListFields(table)]:
-            arcpy.DeleteField_management(table, field_name)
-        if not arcpy.ListFields(table, field_name):
-            arcpy.AddField_management(
-                in_table=table,
-                field_name=field_name,
-                field_type=field_type,
-                field_alias="Código Municipal Catastral" if field_name == self.TEMP_FIELD else field_name
+        # Resolver ruta al JSON si es relativa
+        if not os.path.isabs(json_path):
+            json_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                "cod_catastrales.json"
             )
 
-    def _rename_field(self, table, old_name, new_name):
-        """
-        Renombra un campo en una tabla.
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f"No se encuentra el archivo de códigos catastrales en: {json_path}")
         
-        Args:
-            table (str): Nombre de la tabla
-            old_name (str): Nombre actual del campo
-            new_name (str): Nuevo nombre del campo
-        """
-        try:
-            self._manage_field(table, new_name)
-            arcpy.CalculateField_management(table, new_name, f"!{old_name}!", "PYTHON3")
-            arcpy.DeleteField_management(table, old_name)
-        except Exception as e:
-            print(f"Error renombrando campo {old_name} a {new_name}: {str(e)}")
+        # Cargar códigos catastrales
+        with open(json_path, 'r', encoding='utf-8') as f:
+            json_array = json.load(f)
+            self.cadastral_codes = {
+                str(item['Codigo_Municipal_Catastral']): item
+                for item in json_array  
+            }
+        
+        # Definiciones de campos requeridos
+        self.field_definitions = {
+            'Nombre_Municipio': ('TEXT', 255),
+            'Nombre_Isla': ('TEXT', 50),
+            'Codigo_Municipal_ISTAC': ('LONG', None),
+            'Codigo_Isla_INE': ('LONG', None)
+        }
 
-    def _normalize_fields(self, final_gdb):
-        """
-        Normaliza los campos en todas las tablas de la geodatabase.
-        
-        Args:
-            final_gdb (str): Ruta de la geodatabase final
-        """
-        arcpy.env.workspace = final_gdb
-        
-        for table in arcpy.ListTables():
-            try:
-                print(f"\nProcesando tabla: {table}")
-                table_path = os.path.join(final_gdb, table)
+    def process_directory(self, input_dirs, final_gdb):
+        """Proceso principal de DBFs"""
+        try:
+            # Set workspace globally for the class
+            self.workspace = final_gdb
+            arcpy.env.workspace = self.workspace
+            print(f"Setting workspace to: {self.workspace}")
+
+            for input_dir in input_dirs:
+                if not os.path.exists(input_dir):
+                    print(f"Warning: Directory does not exist: {input_dir}")
+                    continue
                 
-                # Verificar si existe el campo temporal
-                if "COD_MUNI" in [f.name for f in arcpy.ListFields(table_path)]:
-                    print(f"1. Creando campo '{self.MUNICIPAL_CODE_FIELD}'...")
-                    arcpy.AddField_management(
-                        in_table=table_path,
-                        field_name=self.MUNICIPAL_CODE_FIELD,
-                        field_type="LONG",
-                        field_alias="Código Municipal Catastral"
-                    )
+                self._process_dbf_files(input_dir, final_gdb)
+            
+            # Merge all tables at the end
+            print("\nMerging all processed tables...")
+            self.merge_tables(final_gdb)
+            
+        except Exception as e:
+            print(f"Error in process_directory: {str(e)}")
+            raise
+
+    def _process_dbf_files(self, input_dir, final_gdb):
+        """Procesar archivos DBF encontrados siguiendo el patrón de GDBProcessor"""
+        
+        for root, _, files in os.walk(input_dir):
+            # Filter for relevant DBF files first
+            dbf_files = [f for f in files if any(re.match(pattern, f, re.IGNORECASE) 
+                        for pattern in self.ALLOWED_PATTERNS.values())]
+            
+            if dbf_files:  # Only print if we found matching files
+                print(f"Scanning folder: {root}")
+                for file in dbf_files:
+                    print(f"Found DBF file: {file}")
                     
-                    print(f"2. Copiando valores desde 'COD_MUNI'...")
-                    arcpy.CalculateField_management(
-                        in_table=table_path,
-                        field=self.MUNICIPAL_CODE_FIELD,
-                        expression="!COD_MUNI!",
-                        expression_type="PYTHON3"
-                    )
+                    # Extract information from filename
+                    municipal_code = self._extract_municipal_code(file)
                     
-                    print(f"3. Eliminando campo temporal 'COD_MUNI'...")
-                    arcpy.DeleteField_management(
-                        in_table=table_path,
-                        drop_field="COD_MUNI"
-                    )
+                    if not municipal_code:
+                        print(f"No municipal code found in: {file}")
+                        continue
                     
-                    print(f"✓ Campo normalizado en {table}")
+                    print(f"Successfully found municipal code: {municipal_code}")
+
+                    # 2. Determinar dataset y tipo de tabla
+                    prefix_match = re.search(r'[ru]A', file, re.IGNORECASE)
+                    if not prefix_match:
+                        continue
+
+                    prefix = prefix_match.group()  # Remove .lower() to keep original case
+
+                    if prefix not in self.PREFIX_MAPPING:
+                        continue
+
+                    dataset = self.PREFIX_MAPPING[prefix]
+                    table_type = self._extract_table_type(file)
+                    if not table_type:
+                        continue
+
+                    print(f"\nProcesando: {file}")
+                    print(f"- Dataset: {dataset}")
+                    print(f"- Tipo: {table_type}")
+                    print(f"- Código: {municipal_code}")
+
+                    # 3. Crear tabla en GDB (not in feature dataset)
+                    table_name = f"{dataset}_{table_type}_{municipal_code}"  # Added municipal code to make unique tables
+
+                    try:
+                        target_table = os.path.join(final_gdb, table_name)  # Changed to use final_gdb directly
+                        
+                        if arcpy.Exists(target_table):
+                            print(f"- Eliminando tabla existente: {table_name}")
+                            arcpy.Delete_management(target_table)
+                        
+                        print(f"- Convirtiendo DBF a tabla: {table_name}")
+                        arcpy.TableToTable_conversion(
+                            in_rows=os.path.join(root, file),
+                            out_path=final_gdb,  # Changed from dataset_path to final_gdb
+                            out_name=table_name
+                        )
+
+                        # Añadir y poblar campo de código municipal
+                        print(f"- Añadiendo código municipal")
+                        arcpy.AddField_management(
+                            target_table, 
+                            self.CODE_FIELD, 
+                            "LONG", 
+                            field_alias="Código Municipal Catastral"
+                        )
+                        
+                        with arcpy.da.UpdateCursor(target_table, [self.CODE_FIELD]) as cursor:
+                            for row in cursor:
+                                row[0] = municipal_code
+                                cursor.updateRow(row)
+
+                        # 4. Añadir información adicional del JSON
+                        self._add_cadastral_info(target_table, municipal_code)
+                        
+                        print(f"✓ Tabla completada: {table_name}")
+
+                    except Exception as e:
+                        print(f"Error procesando tabla {file}: {str(e)}")
+                        continue
+
+    def _extract_municipal_code(self, filename):
+        """Extraer código municipal del nombre"""
+        pattern = re.compile(r"^(\d+)")
+        match = pattern.match(filename)
+        return int(match.group(1)) if match else None
+
+    def _extract_table_type(self, filename):
+        """Extraer tipo de tabla del nombre"""
+        for table_type, pattern in self.ALLOWED_PATTERNS.items():
+            if re.match(pattern, filename, re.IGNORECASE):
+                return table_type
+        return None
+
+    def _add_cadastral_info(self, table, municipal_code):
+        """Añadir información del JSON de códigos catastrales"""
+        try:
+            # Use optimized dictionary lookup
+            code_info = self.cadastral_codes.get(str(municipal_code))
+            
+            if not code_info:
+                print(f"No se encuentra información para código {municipal_code}")
+                return
+
+            # Añadir campos adicionales del JSON
+            for field, value in code_info.items():
+                if field != 'Codigo_Municipal_Catastral':
+                    field_name = field[:10]  # Limitar nombre a 10 caracteres
+                    arcpy.AddField_management(table, field_name, "TEXT", field_alias=field)
+                    arcpy.CalculateField_management(table, field_name, f"'{value}'", "PYTHON3")
+
+        except Exception as e:
+            print(f"Error añadiendo información catastral: {str(e)}")
+
+    def merge_tables(self, final_gdb):
+        """Merge tables by type after processing"""
+        try:
+            # Define the final merged table names
+            merged_tables = {
+                "Urbano_Carvia": [],
+                "Rustico_Carvia": [],
+                "Rustico_RUCULTIVO": [],
+                "Rustico_RUSUBPARCELA": []
+            }
+
+            # Get all tables in the geodatabase
+            arcpy.env.workspace = final_gdb
+            tables = arcpy.ListTables()
+
+            # Group tables by type
+            for table in tables:
+                if "_Carvia_" in table:
+                    if "Rustico" in table:
+                        merged_tables["Rustico_Carvia"].append(os.path.join(final_gdb, table))
+                    else:
+                        merged_tables["Urbano_Carvia"].append(os.path.join(final_gdb, table))
+                elif "_RUCULTIVO_" in table:
+                    merged_tables["Rustico_RUCULTIVO"].append(os.path.join(final_gdb, table))
+                elif "_RUSUBPARCELA_" in table:
+                    merged_tables["Rustico_RUSUBPARCELA"].append(os.path.join(final_gdb, table))
+
+            # Merge tables by type
+            for merged_name, table_list in merged_tables.items():
+                if table_list:
+                    print(f"\nMerging tables for {merged_name}...")
+                    output_table = os.path.join(final_gdb, merged_name)
                     
-            except Exception as e:
-                print(f"Error procesando tabla {table}: {str(e)}")
-                continue
+                    if arcpy.Exists(output_table):
+                        print(f"Removing existing merged table: {merged_name}")
+                        arcpy.Delete_management(output_table)
+
+                    print(f"Merging {len(table_list)} tables...")
+                    arcpy.Merge_management(table_list, output_table)
+                    
+                    print(f"Cleaning up individual tables...")
+                    for table in table_list:
+                        arcpy.Delete_management(table)
+                    
+                    print(f"✓ Successfully created {merged_name}")
+
+        except Exception as e:
+            print(f"Error merging tables: {str(e)}")
+            raise
