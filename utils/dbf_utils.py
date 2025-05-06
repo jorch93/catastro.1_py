@@ -5,22 +5,37 @@ import re
 import json
 
 class DBFProcessor:
-    """Procesa archivos DBF del catastro"""
+    """
+    Clase para procesar archivos DBF del catastro y convertirlos a tablas en geodatabase.
+    
+    Funcionalidades:
+    - Procesa archivos DBF rústicos y urbanos
+    - Extrae códigos municipales de los nombres
+    - Añade información catastral desde JSON
+    - Fusiona tablas por tipo al final del proceso
+    """
     
     def __init__(self, json_path="cod_catastrales.json"):
         """
-        Inicializar constantes y cargar códigos catastrales
+        Inicialización con constantes y configuración.
         
         Args:
-            json_path (str): Ruta al archivo JSON con códigos catastrales (default: cod_catastrales.json)
+            json_path (str): Ruta al archivo JSON con códigos catastrales
+        
+        Atributos:
+            PREFIX_MAPPING (dict): Mapeo de prefijos a tipos de dataset
+            ALLOWED_PATTERNS (dict): Patrones permitidos para tipos de tabla
+            CODE_FIELD (str): Nombre del campo para código municipal
+            workspace (str): Espacio de trabajo actual
+            cadastral_codes (dict): Códigos catastrales cargados del JSON
         """
-        # Mapeo de prefijos a datasets
+        # Mapeo de prefijos
         self.PREFIX_MAPPING = {
             "rA": "Rustico",
             "uA": "Urbano"
         }
 
-        # Define allowed table types and their patterns
+        # Definición de patrones permitidos
         self.ALLOWED_PATTERNS = {
             "Carvia": r".*_Carvia\.dbf$",
             "RUCULTIVO": r".*_RUCULTIVO\.dbf$",
@@ -47,19 +62,22 @@ class DBFProcessor:
                 str(item['Codigo_Municipal_Catastral']): item
                 for item in json_array  
             }
-        
-        # Definiciones de campos requeridos
-        self.field_definitions = {
-            'Nombre_Municipio': ('TEXT', 255),
-            'Nombre_Isla': ('TEXT', 50),
-            'Codigo_Municipal_ISTAC': ('LONG', None),
-            'Codigo_Isla_INE': ('LONG', None)
-        }
 
     def process_directory(self, input_dirs, final_gdb):
-        """Proceso principal de DBFs"""
+        """
+        Proceso principal de procesamiento de DBFs.
+        
+        Args:
+            input_dirs (list): Lista de directorios de entrada
+            final_gdb (str): Ruta a la geodatabase final
+        
+        Proceso:
+        1. Configura el espacio de trabajo
+        2. Procesa cada directorio de entrada
+        3. Fusiona todas las tablas al final
+        """
         try:
-            # Set workspace globally for the class
+            # Establecer el espacio de trabajo
             self.workspace = final_gdb
             arcpy.env.workspace = self.workspace
             print(f"Setting workspace to: {self.workspace}")
@@ -71,7 +89,7 @@ class DBFProcessor:
                 
                 self._process_dbf_files(input_dir, final_gdb)
             
-            # Merge all tables at the end
+            # Hacer merge de todas las tablas procesadas
             print("\nMerging all processed tables...")
             self.merge_tables(final_gdb)
             
@@ -80,19 +98,30 @@ class DBFProcessor:
             raise
 
     def _process_dbf_files(self, input_dir, final_gdb):
-        """Procesar archivos DBF encontrados siguiendo el patrón de GDBProcessor"""
+        """
+        Procesa archivos DBF encontrados en un directorio.
         
+        Args:
+            input_dir (str): Directorio con archivos DBF
+            final_gdb (str): Geodatabase donde guardar las tablas
+        
+        Proceso:
+        1. Filtra archivos DBF relevantes
+        2. Extrae información del nombre
+        3. Crea y puebla tablas en la geodatabase
+        4. Añade información catastral adicional
+        """
         for root, _, files in os.walk(input_dir):
-            # Filter for relevant DBF files first
+            # Filtrar archivos DBF relevantes
             dbf_files = [f for f in files if any(re.match(pattern, f, re.IGNORECASE) 
                         for pattern in self.ALLOWED_PATTERNS.values())]
             
-            if dbf_files:  # Only print if we found matching files
+            if dbf_files:
                 print(f"Scanning folder: {root}")
                 for file in dbf_files:
                     print(f"Found DBF file: {file}")
                     
-                    # Extract information from filename
+                    # Extraer código municipal
                     municipal_code = self._extract_municipal_code(file)
                     
                     if not municipal_code:
@@ -101,12 +130,12 @@ class DBFProcessor:
                     
                     print(f"Successfully found municipal code: {municipal_code}")
 
-                    # 2. Determinar dataset y tipo de tabla
+                    # Determinar dataset y tipo de tabla
                     prefix_match = re.search(r'[ru]A', file, re.IGNORECASE)
                     if not prefix_match:
                         continue
 
-                    prefix = prefix_match.group()  # Remove .lower() to keep original case
+                    prefix = prefix_match.group()
 
                     if prefix not in self.PREFIX_MAPPING:
                         continue
@@ -121,11 +150,11 @@ class DBFProcessor:
                     print(f"- Tipo: {table_type}")
                     print(f"- Código: {municipal_code}")
 
-                    # 3. Crear tabla en GDB (not in feature dataset)
-                    table_name = f"{dataset}_{table_type}_{municipal_code}"  # Added municipal code to make unique tables
+                    # Crear tabla en GDB
+                    table_name = f"{dataset}_{table_type}_{municipal_code}"
 
                     try:
-                        target_table = os.path.join(final_gdb, table_name)  # Changed to use final_gdb directly
+                        target_table = os.path.join(final_gdb, table_name)
                         
                         if arcpy.Exists(target_table):
                             print(f"- Eliminando tabla existente: {table_name}")
@@ -134,7 +163,7 @@ class DBFProcessor:
                         print(f"- Convirtiendo DBF a tabla: {table_name}")
                         arcpy.TableToTable_conversion(
                             in_rows=os.path.join(root, file),
-                            out_path=final_gdb,  # Changed from dataset_path to final_gdb
+                            out_path=final_gdb,
                             out_name=table_name
                         )
 
@@ -152,7 +181,7 @@ class DBFProcessor:
                                 row[0] = municipal_code
                                 cursor.updateRow(row)
 
-                        # 4. Añadir información adicional del JSON
+                        # Añadir información adicional del JSON
                         self._add_cadastral_info(target_table, municipal_code)
                         
                         print(f"✓ Tabla completada: {table_name}")
@@ -177,7 +206,7 @@ class DBFProcessor:
     def _add_cadastral_info(self, table, municipal_code):
         """Añadir información del JSON de códigos catastrales"""
         try:
-            # Use optimized dictionary lookup
+            # Usar el código municipal para buscar en el JSON
             code_info = self.cadastral_codes.get(str(municipal_code))
             
             if not code_info:
@@ -195,9 +224,24 @@ class DBFProcessor:
             print(f"Error añadiendo información catastral: {str(e)}")
 
     def merge_tables(self, final_gdb):
-        """Merge tables by type after processing"""
+        """
+        Fusiona tablas por tipo después del procesamiento.
+        
+        Args:
+            final_gdb (str): Geodatabase con las tablas a fusionar
+        
+        Proceso:
+        1. Agrupa tablas por tipo
+        2. Fusiona cada grupo en una tabla final
+        3. Limpia tablas individuales
+        4. Crea tablas finales:
+           - Urbano_Carvia
+           - Rustico_Carvia
+           - Rustico_RUCULTIVO
+           - Rustico_RUSUBPARCELA
+        """
         try:
-            # Define the final merged table names
+            # Definir grupos de tablas para el merge
             merged_tables = {
                 "Urbano_Carvia": [],
                 "Rustico_Carvia": [],
@@ -205,11 +249,11 @@ class DBFProcessor:
                 "Rustico_RUSUBPARCELA": []
             }
 
-            # Get all tables in the geodatabase
+            # Extraer todas las tablas de la geodatabase
             arcpy.env.workspace = final_gdb
             tables = arcpy.ListTables()
 
-            # Group tables by type
+            # Agrupar tablas por tipo
             for table in tables:
                 if "_Carvia_" in table:
                     if "Rustico" in table:
@@ -221,7 +265,7 @@ class DBFProcessor:
                 elif "_RUSUBPARCELA_" in table:
                     merged_tables["Rustico_RUSUBPARCELA"].append(os.path.join(final_gdb, table))
 
-            # Merge tables by type
+            # Merge tablas por tipo
             for merged_name, table_list in merged_tables.items():
                 if table_list:
                     print(f"\nMerging tables for {merged_name}...")
