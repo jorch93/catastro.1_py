@@ -1,5 +1,5 @@
 {
-  "input": "# Configurar la carpeta de entrada de la descarga del catastro (PATH)",
-  "output": "# Configurar la carpeta de salida de la descarga del catastro (PATH)",
-  "gdb": "# Configurar la carpeta de salida de la nueva GDB del catastro (PATH)"
- }
+  "input": "C:/Users/jporfer/Documents/Proyectos/Catastro/Catastro_Enero_2025",
+  "output": "C:/Users/jporfer/Documents/Proyectos/Catastro/Catastro_Enero_2025_Extracted",
+  "gdb": "C:/Users/jporfer/Documents/Proyectos/Catastro/Catastro_Enero_2025_Extracted/Catastro_Enero_2025.gdb"
+}

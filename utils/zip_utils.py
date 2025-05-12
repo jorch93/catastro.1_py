@@ -2,7 +2,8 @@
 import os
 import zipfile
 import patoolib
-from concurrent.futures import ThreadPoolExecutor
+from tqdm.auto import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class ZipExtractor:
     """
@@ -37,22 +38,18 @@ class ZipExtractor:
             return
 
         output_dir = output_dir or input_dir
-        files = [f for f in os.listdir(input_dir) if f.lower().endswith('.zip')]
+        zip_files = [f for f in os.listdir(input_dir) if f.lower().endswith('.zip')]
 
-        # Procesar archivos ZIP en paralelo
         with ThreadPoolExecutor() as executor:
-            futures = []
-            for file in files:
-                input_zip = os.path.join(input_dir, file)
-                zip_output_dir = os.path.join(output_dir, os.path.splitext(file)[0])
-                os.makedirs(zip_output_dir, exist_ok=True)
-                
-                futures.append(
-                    executor.submit(self.extract_nested_zip, input_zip, zip_output_dir)
-                )
-            
-            # Espera a que todas las tareas se completen
-            for future in futures:
+            futures = {
+                executor.submit(
+                    self.extract_nested_zip,
+                    os.path.join(input_dir, file),
+                    os.path.join(output_dir, os.path.splitext(file)[0])
+                ): file for file in zip_files
+            }
+
+            for future in tqdm(as_completed(futures), total=len(futures), desc="Procesando archivos ZIP [1/7]", unit="file"):
                 zip_output_dir = future.result()
                 if zip_output_dir and os.path.exists(zip_output_dir):
                     self.extract_all_zips_in_subdirectories(zip_output_dir)

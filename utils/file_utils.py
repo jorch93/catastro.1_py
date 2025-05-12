@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+from tqdm.auto import tqdm
 
 class FileOrganizer:
     """
@@ -39,8 +40,10 @@ class FileOrganizer:
         # Crear directorios de categorías
         category_paths = self._create_category_dirs(base_dir)
         
-        # Recorrer subdirectorios
-        for root, _, _ in os.walk(base_dir):
+        # Recolectar subdirectorios primero
+        all_dirs = [root for root, _, _ in os.walk(base_dir)]
+    
+        for root in tqdm(all_dirs, desc="Organizando archivos [2/7]", unit="dir"):
             if any(category in root for category in self.CATEGORY_DIRS.values()):
                 continue  # Saltar directorios de categorías ya creados
                 
