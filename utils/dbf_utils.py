@@ -88,7 +88,6 @@ class DBFProcessor:
             # Establecer el espacio de trabajo
             self.workspace = final_gdb
             arcpy.env.workspace = self.workspace
-            print(f"Setting workspace to: {self.workspace}")
 
             for input_dir in input_dirs:
                 if not os.path.exists(input_dir):
@@ -98,7 +97,6 @@ class DBFProcessor:
                 self._process_dbf_files(input_dir, final_gdb)
             
             # Hacer merge de todas las tablas procesadas
-            print("\nMerging all processed tables...")
             self.merge_tables(final_gdb)
             
         except Exception as e:
@@ -125,9 +123,7 @@ class DBFProcessor:
                         for pattern in self.ALLOWED_PATTERNS.values())]
             
             if dbf_files:
-                print(f"Scanning folder: {root}")
                 for file in dbf_files:
-                    print(f"Found DBF file: {file}")
                     
                     # Extraer código municipal
                     municipal_code = self._extract_municipal_code(file)
@@ -135,8 +131,6 @@ class DBFProcessor:
                     if not municipal_code:
                         print(f"No municipal code found in: {file}")
                         continue
-                    
-                    print(f"Successfully found municipal code: {municipal_code}")
 
                     # Determinar dataset y tipo de tabla
                     prefix_match = re.search(r'[ru]A', file, re.IGNORECASE)
@@ -153,11 +147,6 @@ class DBFProcessor:
                     if not table_type:
                         continue
 
-                    print(f"\nProcesando: {file}")
-                    print(f"- Dataset: {dataset}")
-                    print(f"- Tipo: {table_type}")
-                    print(f"- Código: {municipal_code}")
-
                     # Crear tabla en GDB
                     table_name = f"{dataset}_{table_type}_{municipal_code}"
 
@@ -165,10 +154,8 @@ class DBFProcessor:
                         target_table = os.path.join(final_gdb, table_name)
                         
                         if arcpy.Exists(target_table):
-                            print(f"- Eliminando tabla existente: {table_name}")
                             arcpy.Delete_management(target_table)
                         
-                        print(f"- Convirtiendo DBF a tabla: {table_name}")
                         arcpy.TableToTable_conversion(
                             in_rows=os.path.join(root, file),
                             out_path=final_gdb,
@@ -176,7 +163,6 @@ class DBFProcessor:
                         )
 
                         # Añadir y poblar campo de código municipal
-                        print(f"- Añadiendo código municipal")
                         arcpy.AddField_management(
                             target_table, 
                             self.CODE_FIELD, 
@@ -191,8 +177,6 @@ class DBFProcessor:
 
                         # Añadir información adicional del JSON
                         self._add_cadastral_info(target_table, municipal_code)
-                        
-                        print(f"✓ Tabla completada: {table_name}")
 
                     except Exception as e:
                         print(f"Error procesando tabla {file}: {str(e)}")
@@ -293,21 +277,15 @@ class DBFProcessor:
             # Merge tablas por tipo
             for merged_name, table_list in merged_tables.items():
                 if table_list:
-                    print(f"\nMerging tables for {merged_name}...")
                     output_table = os.path.join(final_gdb, merged_name)
                     
                     if arcpy.Exists(output_table):
-                        print(f"Removing existing merged table: {merged_name}")
                         arcpy.Delete_management(output_table)
 
-                    print(f"Merging {len(table_list)} tables...")
                     arcpy.Merge_management(table_list, output_table)
                     
-                    print(f"Cleaning up individual tables...")
                     for table in table_list:
                         arcpy.Delete_management(table)
-                    
-                    print(f"✓ Successfully created {merged_name}")
 
         except Exception as e:
             print(f"Error merging tables: {str(e)}")

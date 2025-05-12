@@ -47,7 +47,6 @@ class ZipExtractor:
                 zip_output_dir = os.path.join(output_dir, os.path.splitext(file)[0])
                 os.makedirs(zip_output_dir, exist_ok=True)
                 
-                print(f"Procesando archivo: {file}")
                 futures.append(
                     executor.submit(self.extract_nested_zip, input_zip, zip_output_dir)
                 )
@@ -57,8 +56,6 @@ class ZipExtractor:
                 zip_output_dir = future.result()
                 if zip_output_dir and os.path.exists(zip_output_dir):
                     self.extract_all_zips_in_subdirectories(zip_output_dir)
-
-        print("Todos los archivos ZIP han sido descomprimidos en sus respectivas carpetas.")
 
     def extract_nested_zip(self, input_zip, output_dir):
         """
@@ -108,7 +105,6 @@ class ZipExtractor:
                 if os.path.exists(main_zip):
                     try:
                         patoolib.extract_archive(main_zip, outdir=output_dir)
-                        print(f"Archivo dividido extraído: {main_zip}")
                         os.remove(main_zip)
                     except Exception as e:
                         print(f"Error al extraer archivo dividido {main_zip}: {e}")
@@ -116,7 +112,6 @@ class ZipExtractor:
             else:
                 with zipfile.ZipFile(nested_path, 'r') as zip_ref:
                     zip_ref.extractall(output_dir)
-                print(f"Archivo ZIP anidado extraído: {nested_path}")
 
             return output_dir
 

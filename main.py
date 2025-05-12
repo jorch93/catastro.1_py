@@ -30,11 +30,9 @@ def main():
         file_organizer = FileOrganizer()
 
         zip_extractor.process_directory(config["input"], config["output"])
-        print("\nOrganizando archivos en categorías Rústico/Urbano...")
         file_organizer.organize_files(config["output"])
 
         # Procesar GDB
-        print("\nIniciando procesamiento de GDB...")
         input_dirs = [
             os.path.join(config["output"], "Rústico"),
             os.path.join(config["output"], "Urbano")
@@ -42,12 +40,10 @@ def main():
 
         processor = GDBProcessor()
         processor.process_directory(input_dirs, config["gdb"])
-        print("\nProcesamiento GDB completado con éxito")
 
         # Procesar tablas DBF después de GDB
         dbf_processor = DBFProcessor()
         dbf_processor.process_directory(input_dirs, config["gdb"])
-        print("\nProcesamiento DBF completado con éxito")
 
     except Exception as e:
         print(f"\nError durante el procesamiento: {str(e)}")

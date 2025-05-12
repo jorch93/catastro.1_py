@@ -39,25 +39,12 @@ class GDBProcessor:
         self.SPATIAL_REF = arcpy.SpatialReference(32628)
         self.MUNICIPAL_CODE_FIELD = "Codigo_Municipal_Catastral"
         
-        # Configuración de procesamiento segura
+        # Configuración de procesamiento a máxima capacidad
         cpu_count = multiprocessing.cpu_count()
-        cpu_percent = 0.70  # 70% utilización
-        MIN_FREE_CORES = 2  # Mínimo cores libres
         
-        # Calcular cores disponibles manteniendo mínimo libre
-        used_cores = int(cpu_count * cpu_percent)
-        free_cores = cpu_count - used_cores
-        if free_cores < MIN_FREE_CORES:
-            used_cores = cpu_count - MIN_FREE_CORES
-        
-        self.CHUNKS_PER_TYPE = max(2, used_cores // 2)
-        self.max_workers = used_cores
-        
-        print(f"\nConfiguración de procesamiento:")
-        print(f"CPUs totales: {cpu_count}")
-        print(f"CPUs utilizados: {used_cores} ({int(used_cores/cpu_count * 100)}%)")
-        print(f"CPUs libres: {cpu_count - used_cores}")
-        print(f"Chunks por tipo: {self.CHUNKS_PER_TYPE}")
+        # Usar todos los cores disponibles
+        self.CHUNKS_PER_TYPE = max(2, cpu_count // 2)
+        self.max_workers = cpu_count
 
     # Administrador de contexto para cambios de espacio de trabajo
     @contextmanager
@@ -102,7 +89,6 @@ class GDBProcessor:
             
             # Crear y procesar chunks
             chunk_gdbs = self._create_balanced_chunks(input_dirs, chunk_temp_dir)
-            print(f"\nChunks creados: {len(chunk_gdbs)}")
             
             # Procesar chunks en paralelo
             with multiprocessing.Pool(processes=self.max_workers) as pool:
@@ -113,15 +99,12 @@ class GDBProcessor:
                 raise Exception("No chunks processed successfully")
 
             # Fusionar chunks en GDB final
-            print("\nMerging chunks into final GDB...")
             self._merge_final_gdbs(chunk_gdbs.keys(), final_gdb)
 
             # Compactar la geodatabase
-            print("\nCompactando geodatabase final...")
             arcpy.management.Compact(final_gdb)
             
             # Limpieza de directorios temporales
-            print("\nLimpiando directorios temporales...")
             self._cleanup_temp_dir(base_temp_dir)
                 
         except Exception as e:
@@ -150,16 +133,10 @@ class GDBProcessor:
         chunk_gdbs = {}
         
         for idx, input_dir in enumerate(input_dirs):
-            print(f"\nProcesando directorio: {input_dir}")
             # Detección de prefijo
             is_rustico = any(r in input_dir for r in ["Rustico", "Rústico"])
             prefix = "R" if is_rustico else "U"
             chunk_offset = idx * self.CHUNKS_PER_TYPE
-            
-            # Debug info
-            print(f"Tipo: {'Rústico' if is_rustico else 'Urbano'}")
-            print(f"Prefijo: {prefix}")
-            print(f"Offset: {chunk_offset}")
             
             # Recopilar archivos y tamaños
             files_with_size = []
@@ -190,9 +167,6 @@ class GDBProcessor:
                     chunk_name = f"chunk_{prefix}{chunk_num}.gdb"
                     gdb_path = os.path.join(temp_dir, chunk_name)
                     
-                    print(f"Chunk {prefix}{chunk_num}: {len(chunk_files)} archivos, {total_chunk_size/1024/1024:.2f} MB")
-                    print(f"Creando GDB: {chunk_name}")
-                    
                     arcpy.CreateFileGDB_management(temp_dir, os.path.basename(gdb_path))
                     chunk_gdbs[gdb_path] = chunk_files
         
@@ -219,11 +193,9 @@ class GDBProcessor:
         7. Actualización de información catastral
         """
         try:
-            print(f"\nProcesando chunk GDB: {chunk_gdb}")
             with self._managed_workspace(chunk_gdb):
                 # 1. Crear datasets
                 self._create_datasets(chunk_gdb)
-                print("Datasets creados")
 
                 # 2. Importar shapefiles
                 for shp_path in input_files:
@@ -237,29 +209,23 @@ class GDBProcessor:
                                 chunk_gdb,
                                 fc_name
                             )
-                            print(f"Importado: {fc_name}")
                     except Exception as e:
                         print(f"Error importando {shp_path}: {str(e)}")
                         continue
                 
                 # 3. Configurar códigos municipales
                 self._setup_municipal_code_field(chunk_gdb)
-                print("Códigos municipales configurados")
                 
                 # 4. Crear feature classes
                 self._create_feature_classes(chunk_gdb)
-                print("Feature classes creadas")
                 
                 # 5. Append feature classes
                 self._append_feature_classes(chunk_gdb)
-                print("Append completado")
                 
                 # 6. Añadir y actualizar información catastral
                 cadastral_manager = CadastralInfoManager(chunk_gdb, "cod_catastrales.json")
                 for dataset in self.DATASETS:
-                    print(f"\nUpdating cadastral info for {dataset}...")
                     cadastral_manager.process_feature_classes(self.FEATURES, dataset)
-                print("Cadastral info update completado")
                 
                 # 7. Limpeza de workspace antes de finalizar
                 arcpy.env.workspace = None
@@ -337,7 +303,6 @@ class GDBProcessor:
                     )
                 else:
                     arcpy.Merge_management(source_fcs, target_fc)
-                print(f"Merged: {os.path.basename(target_fc)}")
             except Exception as e:
                 print(f"Error merging {feature}: {str(e)}")
 
@@ -387,7 +352,6 @@ class GDBProcessor:
             
                 # Verificar si el directorio fue eliminado
                 if not os.path.exists(temp_dir):
-                    print("Limpieza completada con éxito")
                     return
             
             except Exception as e:
@@ -431,7 +395,6 @@ class GDBProcessor:
                     for row in cursor:
                         row[0] = codigo_municipal
                         cursor.updateRow(row)
-                print(f"Código municipal calculado para: {fc}")
             except Exception as e:
                 print(f"Error procesando {fc}: {str(e)}")
 
@@ -445,7 +408,6 @@ class GDBProcessor:
             dataset_path = os.path.join(gdb_path, dataset)
             if not arcpy.Exists(dataset_path):
                 try:
-                    print(f"Creando dataset {dataset}...")
                     arcpy.CreateFeatureDataset_management(
                         gdb_path, 
                         dataset, 
@@ -453,7 +415,6 @@ class GDBProcessor:
                     )
                     if not arcpy.Exists(dataset_path):
                         raise arcpy.ExecuteError(f"No se pudo verificar la creación del dataset {dataset}")
-                    print(f"Dataset creado exitosamente: {dataset}")
                 except arcpy.ExecuteError as e:
                     print(f"Error creando dataset {dataset}: {str(e)}")
                     raise
@@ -477,7 +438,6 @@ class GDBProcessor:
                             template=template,
                             spatial_reference=self.SPATIAL_REF
                         )
-                        print(f"Feature class creada: {fc_name}")
 
     def _append_feature_classes(self, gdb_path):
         """
@@ -508,7 +468,6 @@ class GDBProcessor:
                     if source_fcs:
                         try:
                             arcpy.Append_management(source_fcs, target_fc, "TEST")
-                            print(f"Append completado para: {os.path.basename(target_fc)}")
                         except Exception as e:
                             print(f"Error en append de {os.path.basename(target_fc)}: {str(e)}")
 
@@ -533,7 +492,6 @@ class GDBProcessor:
                 try:
                     desc = arcpy.Describe(fc)
                     if desc.shapeType == "Point":
-                        print(f"Using Point geometry template for {feature_type}: {fc}")
                         return fc
                 except:
                     continue
@@ -542,6 +500,4 @@ class GDBProcessor:
         
         # Para los casos generales, usar el primer match
         first_match = matches[0]
-        geometry_type = arcpy.Describe(first_match).shapeType
-        print(f"Using template for {feature_type}: {first_match} ({geometry_type})")
         return first_match

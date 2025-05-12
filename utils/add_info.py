@@ -33,8 +33,6 @@ class CadastralInfoManager:
                 for item in json_array  
             }
         
-        print(f"Loaded {len(self.cadastral_codes)} municipal codes")
-        
         # Definiciones de campos requeridos
         self.field_definitions = {
             'Nombre_Municipio': ('TEXT', 255),
@@ -61,7 +59,6 @@ class CadastralInfoManager:
         for field in existing_fields:
             if field in self.field_definitions:
                 arcpy.DeleteField_management(feature_class, field)
-                print(f"Deleted field: {field}")
 
         # Agregar nuevos campos
         for field_name, (field_type, field_length) in self.field_definitions.items():
@@ -71,7 +68,6 @@ class CadastralInfoManager:
                 field_type, 
                 field_length=field_length
             )
-            print(f"Added field: {field_name}")
 
     def update_cadastral_info(self, feature_class):
         """
@@ -90,12 +86,9 @@ class CadastralInfoManager:
             # Adquirir lookup de campos nuevos a actualizar
             fields = ['Codigo_Municipal_Catastral'] + list(self.field_definitions.keys())
             
-            print(f"\nUpdating fields for: {os.path.basename(feature_class)}")
-            
             # Adquirir campos que serán actualizados
             with arcpy.da.UpdateCursor(feature_class, fields) as cursor:
                 field_indices = {field: i for i, field in enumerate(fields)}
-                print(f"Field positions: {field_indices}")
                 
                 updates = 0
                 for row in cursor:
@@ -110,8 +103,6 @@ class CadastralInfoManager:
                         row[field_indices['Codigo_Isla_INE']] = info.get('Codigo_Isla_INE', 0)
                         cursor.updateRow(row)
                         updates += 1
-                
-                print(f"Updated {updates} rows")
                 
         except Exception as e:
             print(f"Error updating {feature_class}: {str(e)}")
@@ -134,7 +125,6 @@ class CadastralInfoManager:
             feature_class = f"{self.workspace}\\{dataset_prefix}\\{dataset_prefix}_{feature_type}"
             
             if arcpy.Exists(feature_class):
-                print(f"\nProcessing: {feature_class}")
                 self.manage_fields(feature_class)
                 self.update_cadastral_info(feature_class)
             else:
