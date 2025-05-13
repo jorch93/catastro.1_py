@@ -43,7 +43,7 @@ class FileOrganizer:
         # Recolectar subdirectorios primero
         all_dirs = [root for root, _, _ in os.walk(base_dir)]
     
-        for root in tqdm(all_dirs, desc="Organizando archivos [2/7]", unit="dir"):
+        for root in tqdm(all_dirs, desc="Organizando archivos [2/7]", unit="dir", leave=False):
             if any(category in root for category in self.CATEGORY_DIRS.values()):
                 continue  # Saltar directorios de categorías ya creados
                 

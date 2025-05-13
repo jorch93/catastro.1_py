@@ -3,6 +3,7 @@ import arcpy
 import os
 import multiprocessing
 from contextlib import contextmanager
+from tqdm.auto import tqdm
 from utils.add_info import CadastralInfoManager
 
 class GDBProcessor:
@@ -39,12 +40,13 @@ class GDBProcessor:
         self.SPATIAL_REF = arcpy.SpatialReference(32628)
         self.MUNICIPAL_CODE_FIELD = "Codigo_Municipal_Catastral"
         
-        # Configuración de procesamiento a máxima capacidad
+        # Configuración de procesamiento al 70% de capacidad
         cpu_count = multiprocessing.cpu_count()
-        
-        # Usar todos los cores disponibles
-        self.CHUNKS_PER_TYPE = max(2, cpu_count // 2)
-        self.max_workers = cpu_count
+        target_cores = int(cpu_count * 0.7)
+
+        # Usar 70% de los cores disponibles
+        self.CHUNKS_PER_TYPE = max(2, target_cores // 2)
+        self.max_workers = target_cores
 
     # Administrador de contexto para cambios de espacio de trabajo
     @contextmanager
@@ -162,7 +164,6 @@ class GDBProcessor:
             # Crear GDBs para cada chunk
             for i, chunk_files in enumerate(chunks):
                 if chunk_files:
-                    total_chunk_size = sum(os.path.getsize(f) for f in chunk_files)
                     chunk_num = i + chunk_offset
                     chunk_name = f"chunk_{prefix}{chunk_num}.gdb"
                     gdb_path = os.path.join(temp_dir, chunk_name)
@@ -198,7 +199,9 @@ class GDBProcessor:
                 self._create_datasets(chunk_gdb)
 
                 # 2. Importar shapefiles
-                for shp_path in input_files:
+                for shp_path in tqdm(input_files, 
+                                     desc="Importando shapefiles a las GDBs [3/7]", 
+                                     unit="file"):
                     try:
                         base_name = os.path.splitext(os.path.basename(shp_path))[0]
                         fc_name = f"T{base_name}" if not base_name.startswith('T') else base_name
@@ -224,7 +227,9 @@ class GDBProcessor:
                 
                 # 6. Añadir y actualizar información catastral
                 cadastral_manager = CadastralInfoManager(chunk_gdb, "cod_catastrales.json")
-                for dataset in self.DATASETS:
+                for dataset in tqdm(self.DATASETS, 
+                                     desc="Actualizando información catastral [6/7]", 
+                                     unit="dataset"):
                     cadastral_manager.process_feature_classes(self.FEATURES, dataset)
                 
                 # 7. Limpeza de workspace antes de finalizar
@@ -392,7 +397,9 @@ class GDBProcessor:
 
                 codigo_municipal = int(os.path.basename(fc)[1:6])
                 with arcpy.da.UpdateCursor(fc, [self.MUNICIPAL_CODE_FIELD]) as cursor:
-                    for row in cursor:
+                    for row in tqdm(cursor, 
+                                    desc=f"Actualizando códigos municipales en las GDBs [4/7]", 
+                                    unit="row"):
                         row[0] = codigo_municipal
                         cursor.updateRow(row)
             except Exception as e:
@@ -447,7 +454,9 @@ class GDBProcessor:
             for dataset in self.DATASETS:
                 dataset_path = os.path.join(gdb_path, dataset)
 
-                for feature in self.FEATURES:
+                for feature in tqdm(self.FEATURES, 
+                                     desc=f"Append de capas de entidad en las GDBs [5/7]", 
+                                     unit="feature"):
                     target_fc = os.path.join(dataset_path, f"{dataset}_{feature}")
                     if not arcpy.Exists(target_fc):
                         continue

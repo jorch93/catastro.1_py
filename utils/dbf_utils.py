@@ -3,6 +3,7 @@ import os
 import arcpy
 import re
 import json
+from tqdm.auto import tqdm
 
 class DBFProcessor:
     """
@@ -123,7 +124,10 @@ class DBFProcessor:
                         for pattern in self.ALLOWED_PATTERNS.values())]
             
             if dbf_files:
-                for file in dbf_files:
+                for file in tqdm(dbf_files,
+                                desc="Procesando tablas DBF [7/7]",
+                                unit="file",
+                                leave=False):
                     
                     # Extraer código municipal
                     municipal_code = self._extract_municipal_code(file)

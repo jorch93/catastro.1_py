@@ -49,7 +49,11 @@ class ZipExtractor:
                 ): file for file in zip_files
             }
 
-            for future in tqdm(as_completed(futures), total=len(futures), desc="Procesando archivos ZIP [1/7]", unit="file"):
+            for future in tqdm(as_completed(futures), 
+                               total=len(futures), 
+                               desc="Procesando archivos ZIP [1/7]", 
+                               unit="file",
+                               leave=False):
                 zip_output_dir = future.result()
                 if zip_output_dir and os.path.exists(zip_output_dir):
                     self.extract_all_zips_in_subdirectories(zip_output_dir)
